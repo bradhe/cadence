@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNext(t *testing.T) {
@@ -14,7 +15,7 @@ func TestNext(t *testing.T) {
 			next, err := Next("* * * * * *", start)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
-			assert.Equal(t, start.Truncate(time.Second).Add(1*time.Second), next)
+			assert.Equal(t, start.Truncate(time.Second).Add(time.Second).Unix(), next.Unix())
 		})
 
 		t.Run("every 5 seconds", func(t *testing.T) {
@@ -45,4 +46,16 @@ func TestNext(t *testing.T) {
 			assert.NotEmpty(t, next)
 		})
 	})
+
+	t.Run("human readable", func(t *testing.T) {
+		_, err := Next("every 1 hour", time.Now())
+		assert.NoError(t, err)
+	})
+}
+
+func TestParseEnglishPattern(t *testing.T) {
+	spec, err := parseEnglishPattern("every 1 hour")
+	require.NoError(t, err)
+	assert.Equal(t, 1, spec.Number)
+	assert.Equal(t, hour, spec.Interval)
 }
