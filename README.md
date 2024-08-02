@@ -8,6 +8,8 @@ make, all behind a single interface.
 import "github.com/bradhe/cadence"
 ```
 
+## Example
+
 ```golang
 package main
 
