@@ -119,16 +119,8 @@ func isValidEnglishPattern(pattern string) bool {
 	}
 }
 
-func IsValid(pattern string) bool {
-	if _, err := cronParser.Parse(pattern); err != nil {
-		return false
-	}
-
-	return true
-}
-
-// Next calculates the next event in the series based on when the last event
-// happened.
+// Next uses the supplied pattern to determine when the next occurance of the
+// event should be.
 func Next(pattern string, last time.Time) (time.Time, error) {
 	if spec, err := parseEnglishPattern(pattern); err == nil {
 		if spec, err := cronParser.Parse(spec.ToCrontab()); err != nil {
@@ -142,5 +134,14 @@ func Next(pattern string, last time.Time) (time.Time, error) {
 		return time.Time{}, err
 	} else {
 		return spec.Next(last), nil
+	}
+}
+
+// IsValid will tell you if the pattern can be parsed by cadence.
+func IsValid(pattern string) bool {
+	if _, err := Next(pattern, time.Now()); err != nil {
+		return false
+	} else {
+		return true
 	}
 }
