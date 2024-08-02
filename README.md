@@ -1,4 +1,4 @@
-# :time: Cadence
+# :alarm_clock: Cadence
 
 This package is a simple interface in to calculating the next occurence of an
 event based on cron syntax. It also supports a more human-readable syntax to
