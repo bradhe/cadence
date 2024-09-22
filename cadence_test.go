@@ -51,6 +51,15 @@ func TestNext(t *testing.T) {
 		_, err := Next("every 1 hour", time.Now())
 		assert.NoError(t, err)
 	})
+
+	t.Run("while inside an interval", func(t *testing.T) {
+		start, err := time.Parse(time.RFC3339, "2021-01-01T12:00:01.001Z")
+		require.NoError(t, err)
+
+		next, err := Next("0 */1 * * *", start)
+		require.NoError(t, err)
+		assert.Equal(t, "2021-01-01 12:01:00 +0000 UTC", next.String())
+	})
 }
 
 func TestParseEnglishPattern(t *testing.T) {

@@ -122,18 +122,22 @@ func isValidEnglishPattern(pattern string) bool {
 // Next uses the supplied pattern to determine when the next occurance of the
 // event should be.
 func Next(pattern string, last time.Time) (time.Time, error) {
+	// we lop off the second because that's the smallest interval we can align
+	// to as per the semantics of the library.
+	last = last.Truncate(time.Second)
+
 	if spec, err := parseEnglishPattern(pattern); err == nil {
 		if spec, err := cronParser.Parse(spec.ToCrontab()); err != nil {
 			return time.Time{}, err
 		} else {
 			return spec.Next(last), nil
 		}
-	}
-
-	if spec, err := cronParser.Parse(pattern); err != nil {
-		return time.Time{}, err
 	} else {
-		return spec.Next(last), nil
+		if spec, err := cronParser.Parse(pattern); err != nil {
+			return time.Time{}, err
+		} else {
+			return spec.Next(last), nil
+		}
 	}
 }
 
