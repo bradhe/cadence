@@ -34,7 +34,7 @@ func (e englishPattern) ToCrontab() string {
 	case second:
 		return fmt.Sprintf("*/%d * * * * *", e.Number)
 	case minute:
-		return fmt.Sprintf("* */%d * * * *", e.Number)
+		return fmt.Sprintf("0 */%d * * * *", e.Number)
 	case hour:
 		return fmt.Sprintf("0 0 */%d * * *", e.Number)
 	case week:
@@ -136,7 +136,9 @@ func Next(pattern string, last time.Time) (time.Time, error) {
 		if spec, err := cronParser.Parse(pattern); err != nil {
 			return time.Time{}, err
 		} else {
-			return spec.Next(last), nil
+			next := spec.Next(last)
+
+			return next, nil
 		}
 	}
 }

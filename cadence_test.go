@@ -26,12 +26,20 @@ func TestNext(t *testing.T) {
 			assert.Equal(t, start.Truncate(5*time.Second).Add(5*time.Second), next)
 		})
 
+		t.Run("on the dot", func(t *testing.T) {
+			start := MustParse(t, "2021-01-01T12:00:05Z")
+			next, err := Next("*/5 * * * * *", start)
+			assert.NoError(t, err)
+			assert.NotEmpty(t, next)
+			assert.Equal(t, MustParse(t, "2021-01-01T12:00:10Z"), next)
+		})
+
 		t.Run("every 5th second", func(t *testing.T) {
-			start := time.Now()
+			start := MustParse(t, "2021-01-01T12:00:05Z")
 			next, err := Next("5 * * * * *", start)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
-			assert.Equal(t, start.Truncate(time.Minute).Add(time.Minute).Add(5*time.Second), next)
+			assert.Equal(t, MustParse(t, "2021-01-01T12:01:05Z"), next)
 		})
 
 		t.Run("every 5th second on Tuesday", func(t *testing.T) {
@@ -60,6 +68,22 @@ func TestNext(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "2021-01-01 12:01:00 +0000 UTC", next.String())
 	})
+
+	t.Run("inside a 5 minute interval", func(t *testing.T) {
+		start := MustParse(t, "2025-01-22T16:22:23.717803Z")
+		next, err := Next("every 5 minutes", start)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, next)
+		assert.Equal(t, MustParse(t, "2025-01-22T16:25:00Z"), next)
+	})
+
+	t.Run("inside a 1 hour interval", func(t *testing.T) {
+		start := MustParse(t, "2025-01-22T16:22:23.717803Z")
+		next, err := Next("every 1 hour", start)
+		assert.NoError(t, err)
+		assert.NotEmpty(t, next)
+		assert.Equal(t, MustParse(t, "2025-01-22T17:00:00Z"), next)
+	})
 }
 
 func TestParseEnglishPattern(t *testing.T) {
@@ -67,4 +91,12 @@ func TestParseEnglishPattern(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, spec.Number)
 	assert.Equal(t, hour, spec.Interval)
+}
+
+func MustParse(t *testing.T, str string) time.Time {
+	t.Helper()
+
+	val, err := time.Parse(time.RFC3339, str)
+	require.NoError(t, err)
+	return val
 }
