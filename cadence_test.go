@@ -87,10 +87,55 @@ func TestNext(t *testing.T) {
 }
 
 func TestParseEnglishPattern(t *testing.T) {
-	spec, err := parseEnglishPattern("every 1 hour")
-	require.NoError(t, err)
-	assert.Equal(t, 1, spec.Number)
-	assert.Equal(t, hour, spec.Interval)
+	t.Run("general case", func(t *testing.T) {
+		spec, err := parseEnglishPattern("every 2 years")
+		require.NoError(t, err)
+		assert.Equal(t, 2, spec.Number)
+		assert.Equal(t, year, spec.TimeUnit)
+	})
+
+	t.Run("pattern too short", func(t *testing.T) {
+		_, err := parseEnglishPattern("every ")
+		require.Error(t, err)
+	})
+
+	t.Run("pattern too long", func(t *testing.T) {
+		_, err := parseEnglishPattern("every 5 years now!")
+		require.Error(t, err)
+	})
+
+	t.Run("pattern with an implicit 1", func(t *testing.T) {
+		spec, err := parseEnglishPattern("every month")
+		require.NoError(t, err)
+		assert.Equal(t, 1, spec.Number)
+		assert.Equal(t, month, spec.TimeUnit)
+	})
+
+	t.Run("pattern with 1 and time unit in plural", func(t *testing.T) {
+		_, err := parseEnglishPattern("every 1 weeks")
+		require.Error(t, err)
+	})
+
+	t.Run("pattern with > 1 and time unit in singular", func(t *testing.T) {
+		_, err := parseEnglishPattern("every 2 month")
+		require.Error(t, err)
+	})
+
+	t.Run("pattern with invalid number", func(t *testing.T) {
+		_, err := parseEnglishPattern("every something months")
+		require.Error(t, err)
+	})
+
+	t.Run("pattern with malformed number", func(t *testing.T) {
+		_, err := parseEnglishPattern("every 2s months")
+		require.Error(t, err)
+	})
+
+	t.Run("pattern not starting with every", func(t *testing.T) {
+		_, err := parseEnglishPattern("1 year every")
+		require.Error(t, err)
+	})
+
 }
 
 func MustParse(t *testing.T, str string) time.Time {
