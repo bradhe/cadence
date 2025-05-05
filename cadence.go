@@ -5,32 +5,31 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unicode"
 
 	"github.com/robfig/cron"
 )
 
 var cronParser = cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
 
-type interval string
+type timeUnit string
 
 const (
-	second = interval("second")
-	minute = interval("minute")
-	hour   = interval("hour")
-	day    = interval("day")
-	week   = interval("week")
-	month  = interval("month")
-	year   = interval("year")
+	second = timeUnit("second")
+	minute = timeUnit("minute")
+	hour   = timeUnit("hour")
+	day    = timeUnit("day")
+	week   = timeUnit("week")
+	month  = timeUnit("month")
+	year   = timeUnit("year")
 )
 
-type englishPattern struct {
+type interval struct {
 	Number   int
-	Interval interval
+	TimeUnit timeUnit
 }
 
-func (e englishPattern) ToCrontab() string {
-	switch e.Interval {
+func (e interval) ToCrontab() string {
+	switch e.TimeUnit {
 	case second:
 		return fmt.Sprintf("*/%d * * * * *", e.Number)
 	case minute:
@@ -48,43 +47,36 @@ func (e englishPattern) ToCrontab() string {
 	}
 }
 
-func parseEnglishPattern(pattern string) (*englishPattern, error) {
-	orig := pattern
-	pattern = strings.TrimSpace(pattern)
-	pattern = strings.ToLower(pattern)
-
-	if !strings.HasPrefix(pattern, "every") {
-		return nil, fmt.Errorf("invalid prefix for pattern `%s`", orig)
-	}
-
-	// there should be a number as the next character.
-	pattern = strings.TrimPrefix(pattern, "every")
-	pattern = strings.TrimSpace(pattern)
-
-	var bld strings.Builder
-
-	for _, r := range pattern {
-		if unicode.IsDigit(r) {
-			bld.WriteRune(r)
-		} else {
-			break
-		}
-	}
-
-	i, _ := strconv.Atoi(bld.String())
-
+func parseEnglishPattern(pattern string) (*interval, error) {
+	pattern = strings.ToLower(pattern) // case insensitive
+	tokens := strings.Fields(pattern)
 	var num int
+	var tUnit timeUnit
+	var timeUnitToken string
 
-	if i == 0 {
+	// structure sanity check. There should be 3 tokens (or 2 if a "1" is implied)
+	// in the form of "every <number> <time unit>".
+	// We need to parse the number if it exists and retrieve the time unit.
+	if len(tokens) == 3 {
+		if n, err := strconv.Atoi(tokens[1]); err != nil {
+			return nil, fmt.Errorf("invalid pattern: `%s` cannot be parsed as a number", tokens[1])
+		} else {
+			num = n
+			timeUnitToken = tokens[2]
+		}
+	} else if len(tokens) == 2 {
+		//there is no number so 1 is implied. Time unit should be the second token
 		num = 1
+		timeUnitToken = tokens[1]
 	} else {
-		num = i
+		return nil, fmt.Errorf("invalid number of tokens for pattern `%s`, expecting 2 or 3 tokens, got %d", pattern, len(tokens))
 	}
 
-	pattern = strings.TrimLeftFunc(pattern, unicode.IsDigit)
-	pattern = strings.TrimSpace(pattern)
+	if tokens[0] != "every" {
+		return nil, fmt.Errorf("invalid prefix for pattern `%s`, all patterns must start with \"every\"", pattern)
+	}
 
-	suffixes := map[string]interval{
+	timeUnits := map[string]timeUnit{
 		"second":  second,
 		"seconds": second,
 		"minute":  minute,
@@ -101,14 +93,26 @@ func parseEnglishPattern(pattern string) (*englishPattern, error) {
 		"years":   year,
 	}
 
-	if i, ok := suffixes[pattern]; ok {
-		return &englishPattern{
-			Number:   num,
-			Interval: i,
-		}, nil
+	if unit, ok := timeUnits[timeUnitToken]; !ok {
+		return nil, fmt.Errorf("invalid time unit `%s` for pattern `%s`", timeUnitToken, pattern)
+	} else if num == 1 && isPlural(timeUnitToken) {
+		// user supplied sth like "every (1) months", probable bug on their side, reject it.
+		return nil, fmt.Errorf("invalid number and time unit combination. Number is 1 and time unit is in plural")
+	} else if num > 1 && !isPlural(timeUnitToken) {
+		// the inverse of before
+		return nil, fmt.Errorf("invalid number and time unit combination. Number is > 1 and time unit is in singular")
 	} else {
-		return nil, fmt.Errorf("couldn't define interval for patten `%s`", orig)
+		tUnit = unit
 	}
+
+	return &interval{
+		Number:   num,
+		TimeUnit: tUnit,
+	}, nil
+}
+
+func isPlural(s string) bool {
+	return strings.HasSuffix(s, "s")
 }
 
 func isValidEnglishPattern(pattern string) bool {
