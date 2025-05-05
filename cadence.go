@@ -23,12 +23,12 @@ const (
 	year   = timeUnit("year")
 )
 
-type englishPattern struct {
+type interval struct {
 	Number   int
 	TimeUnit timeUnit
 }
 
-func (e englishPattern) ToCrontab() string {
+func (e interval) ToCrontab() string {
 	switch e.TimeUnit {
 	case second:
 		return fmt.Sprintf("*/%d * * * * *", e.Number)
@@ -47,7 +47,7 @@ func (e englishPattern) ToCrontab() string {
 	}
 }
 
-func parseEnglishPattern(pattern string) (*englishPattern, error) {
+func parseEnglishPattern(pattern string) (*interval, error) {
 	pattern = strings.ToLower(pattern) // case insensitive
 	tokens := strings.Fields(pattern)
 	var num int
@@ -105,7 +105,7 @@ func parseEnglishPattern(pattern string) (*englishPattern, error) {
 		tUnit = unit
 	}
 
-	return &englishPattern{
+	return &interval{
 		Number:   num,
 		TimeUnit: tUnit,
 	}, nil
