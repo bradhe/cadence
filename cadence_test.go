@@ -136,6 +136,13 @@ func TestParseEnglishPattern(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("pattern with uppercase characters", func(t *testing.T) {
+		spec, err := parseEnglishPattern("Every 5 Weeks")
+		require.NoError(t, err)
+		assert.Equal(t, 5, spec.Number)
+		assert.Equal(t, week, spec.TimeUnit)
+	})
+
 }
 
 func MustParse(t *testing.T, str string) time.Time {

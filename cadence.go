@@ -48,7 +48,8 @@ func (e englishPattern) ToCrontab() string {
 }
 
 func parseEnglishPattern(pattern string) (*englishPattern, error) {
-	var tokens []string = strings.Fields(pattern)
+	pattern = strings.ToLower(pattern) // case insensitive
+	tokens := strings.Fields(pattern)
 	var num int
 	var tUnit timeUnit
 	var timeUnitToken string
