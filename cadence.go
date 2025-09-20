@@ -36,6 +36,8 @@ func (e interval) ToCrontab() string {
 		return fmt.Sprintf("0 */%d * * * *", e.Number)
 	case hour:
 		return fmt.Sprintf("0 0 */%d * * *", e.Number)
+	case day:
+		return fmt.Sprintf("0 0 0 */%d * *", e.Number)
 	case week:
 		return fmt.Sprintf("* * * */%d * *", (e.Number * 7))
 	case month:
@@ -65,7 +67,7 @@ func parseEnglishPattern(pattern string) (*interval, error) {
 			timeUnitToken = tokens[2]
 		}
 	} else if len(tokens) == 2 {
-		//there is no number so 1 is implied. Time unit should be the second token
+		// there is no number so 1 is implied. Time unit should be the second token
 		num = 1
 		timeUnitToken = tokens[1]
 	} else {

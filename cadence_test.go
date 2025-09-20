@@ -116,6 +116,17 @@ func TestParseEnglishPattern(t *testing.T) {
 		require.Error(t, err)
 	})
 
+	t.Run("pattern with days works", func(t *testing.T) {
+		now := time.Now()
+		today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		tomorrow := today.Add(24 * time.Hour)
+
+		// every 1 day should resolve to tomorrow
+		next, err := Next("every 1 day", time.Now())
+		require.NoError(t, err)
+		require.Equal(t, next, tomorrow)
+	})
+
 	t.Run("pattern with > 1 and time unit in singular", func(t *testing.T) {
 		_, err := parseEnglishPattern("every 2 month")
 		require.Error(t, err)
@@ -142,7 +153,6 @@ func TestParseEnglishPattern(t *testing.T) {
 		assert.Equal(t, 5, spec.Number)
 		assert.Equal(t, week, spec.TimeUnit)
 	})
-
 }
 
 func MustParse(t *testing.T, str string) time.Time {
