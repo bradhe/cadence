@@ -10,46 +10,46 @@ import (
 
 func TestNext(t *testing.T) {
 	t.Run("patterns with seconds", func(t *testing.T) {
-		t.Run("every second", func(t *testing.T) {
+		t.Run("every minute", func(t *testing.T) {
 			start := time.Now()
-			next, err := Next("* * * * * *", start)
+			next, err := Next("* * * * *", start)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
-			assert.Equal(t, start.Truncate(time.Second).Add(time.Second).Unix(), next.Unix())
+			assert.Equal(t, start.Truncate(time.Minute).Add(time.Minute).Unix(), next.Unix())
 		})
 
-		t.Run("every 5 seconds", func(t *testing.T) {
+		t.Run("every 5 minutes", func(t *testing.T) {
 			start := time.Now().Truncate(time.Nanosecond)
-			next, err := Next("*/5 * * * * *", start)
+			next, err := Next("*/5 * * * *", start)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
-			assert.Equal(t, start.Truncate(5*time.Second).Add(5*time.Second), next)
+			assert.Equal(t, start.Truncate(5*time.Minute).Add(5*time.Minute), next)
 		})
 
 		t.Run("on the dot", func(t *testing.T) {
 			start := MustParse(t, "2021-01-01T12:00:05Z")
-			next, err := Next("*/5 * * * * *", start)
+			next, err := Next("*/5 * * * *", start)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
-			assert.Equal(t, MustParse(t, "2021-01-01T12:00:10Z"), next)
+			assert.Equal(t, MustParse(t, "2021-01-01T12:05:00Z"), next)
 		})
 
-		t.Run("every 5th second", func(t *testing.T) {
-			start := MustParse(t, "2021-01-01T12:00:05Z")
-			next, err := Next("5 * * * * *", start)
+		t.Run("every 5th minute", func(t *testing.T) {
+			start := MustParse(t, "2021-01-01T12:05:00Z")
+			next, err := Next("5 * * * *", start)
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
-			assert.Equal(t, MustParse(t, "2021-01-01T12:01:05Z"), next)
+			assert.Equal(t, MustParse(t, "2021-01-01T13:05:00Z"), next)
 		})
 
-		t.Run("every 5th second on Tuesday", func(t *testing.T) {
-			next, err := Next("5 * * * * 2", time.Now().Add(-1*time.Second))
+		t.Run("every 5th minute on Tuesday", func(t *testing.T) {
+			next, err := Next("5 * * * 2", time.Now().Add(-1*time.Minute))
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
 		})
 
-		t.Run("every 5th second on Tuesday", func(t *testing.T) {
-			next, err := Next("*/5 * * */21 * 2", time.Now().Add(-1*time.Second))
+		t.Run("every 5th minute on Tuesday on the 21st day", func(t *testing.T) {
+			next, err := Next("*/5 * */21 * 2", time.Now().Add(-1*time.Minute))
 			assert.NoError(t, err)
 			assert.NotEmpty(t, next)
 		})
@@ -64,7 +64,7 @@ func TestNext(t *testing.T) {
 		start, err := time.Parse(time.RFC3339, "2021-01-01T12:00:01.001Z")
 		require.NoError(t, err)
 
-		next, err := Next("0 */1 * * *", start)
+		next, err := Next("*/1 * * *", start)
 		require.NoError(t, err)
 		assert.Equal(t, "2021-01-01 12:01:00 +0000 UTC", next.String())
 	})

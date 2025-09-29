@@ -9,12 +9,11 @@ import (
 	"github.com/robfig/cron"
 )
 
-var cronParser = cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
+var cronParser = cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.DowOptional | cron.Descriptor)
 
 type timeUnit string
 
 const (
-	second = timeUnit("second")
 	minute = timeUnit("minute")
 	hour   = timeUnit("hour")
 	day    = timeUnit("day")
@@ -30,22 +29,20 @@ type interval struct {
 
 func (e interval) ToCrontab() string {
 	switch e.TimeUnit {
-	case second:
-		return fmt.Sprintf("*/%d * * * * *", e.Number)
 	case minute:
-		return fmt.Sprintf("0 */%d * * * *", e.Number)
+		return fmt.Sprintf("*/%d * * * *", e.Number)
 	case hour:
-		return fmt.Sprintf("0 0 */%d * * *", e.Number)
+		return fmt.Sprintf("0 */%d * * *", e.Number)
 	case day:
-		return fmt.Sprintf("0 0 0 */%d * *", e.Number)
+		return fmt.Sprintf("0 0 */%d * *", e.Number)
 	case week:
-		return fmt.Sprintf("* * * */%d * *", (e.Number * 7))
+		return fmt.Sprintf("* * */%d * *", (e.Number * 7))
 	case month:
-		return fmt.Sprintf("* * * * */%d *", e.Number)
+		return fmt.Sprintf("* * * */%d *", e.Number)
 	case year:
-		return fmt.Sprintf("* * * * */%d *", (e.Number * 12))
+		return fmt.Sprintf("* * * */%d *", (e.Number * 12))
 	default:
-		return "* * * * * *"
+		return "* * * * *"
 	}
 }
 
@@ -79,8 +76,6 @@ func parseEnglishPattern(pattern string) (*interval, error) {
 	}
 
 	timeUnits := map[string]timeUnit{
-		"second":  second,
-		"seconds": second,
 		"minute":  minute,
 		"minutes": minute,
 		"hour":    hour,
